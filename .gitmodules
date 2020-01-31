@@ -1,0 +1,3 @@
+[submodule "PyWMD"]
+	path = PyWMD
+	url = https://github.com/REDxEYE/PyWMD
