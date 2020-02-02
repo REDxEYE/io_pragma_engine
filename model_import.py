@@ -1,13 +1,8 @@
 import random
 from pathlib import Path
 
-if __name__ == '__main__':
-    import sys
-
-    sys.path.append(r"F:\PYTHON_STUFF\blender_wmd")
-
-from PyWMD.byte_io_wmd import ByteIO
-from PyWMD.pragma_model import PragmaModel, PragmaBone, PragmaMeshV24Plus
+from .PyWMD.byte_io_wmd import ByteIO
+from .PyWMD.pragma_model import PragmaModel, PragmaBone, PragmaMeshV24Plus
 import bpy
 from mathutils import Vector, Quaternion, Matrix
 

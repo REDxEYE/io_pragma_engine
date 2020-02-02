@@ -14,7 +14,7 @@ bl_info = {
 
 import bpy
 from bpy.props import StringProperty, BoolProperty, CollectionProperty, EnumProperty
-from model_import import import_model
+from .model_import import import_model
 
 
 class PyWMDPreferences(bpy.types.AddonPreferences):
@@ -50,7 +50,7 @@ class WMD_import_OT_operator(bpy.types.Operator):
         else:
             directory = Path(self.filepath).absolute()
         for file in self.files:
-            import_model(file)
+            import_model(str(directory / file.name))
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -63,11 +63,17 @@ classes = (PyWMDPreferences, WMD_import_OT_operator)
 register_, unregister_ = bpy.utils.register_classes_factory(classes)
 
 
+def menu_import(self, context):
+    self.layout.operator(WMD_import_OT_operator.bl_idname, text="Pragma model (.wmd)")
+
+
 def register():
     register_()
+    bpy.types.TOPBAR_MT_file_import.append(menu_import)
 
 
 def unregister():
+    bpy.types.TOPBAR_MT_file_import.remove(menu_import)
     unregister_()
 
 
