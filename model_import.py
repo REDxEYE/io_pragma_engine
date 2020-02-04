@@ -154,6 +154,23 @@ def create_model(model, armature, collection):
                             continue
                         weight_groups[id2bone_name[bone_id]].add([n], weight, 'REPLACE')
 
+                mesh_obj.shape_key_add(name='Base')
+
+                for flex_name, flex_info in sub_mesh.flexes.items():
+                    frame = flex_info.frames[0]
+
+                    if not mesh_obj.data.shape_keys.key_blocks.get(flex_name):
+                        mesh_obj.shape_key_add(name=flex_name)
+
+                    for vid, v, _ in frame:
+                        vertex = mesh_obj.data.vertices[vid]
+                        vx = vertex.co.x
+                        vy = vertex.co.y
+                        vz = vertex.co.z
+                        fx, fy, fz = v.values
+                        mesh_obj.data.shape_keys.key_blocks[flex_name].data[vid].co = (
+                            fx + vx, fy + vy, fz + vz)
+
 
 def import_model(model_path: str):
     model_path = Path(model_path)
