@@ -15,7 +15,7 @@ bl_info = {
 import bpy
 from bpy.props import StringProperty, BoolProperty, CollectionProperty, EnumProperty
 from .model_import import import_model
-
+from . import wmd_nodes
 
 class PyWMDPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
@@ -69,11 +69,13 @@ def menu_import(self, context):
 
 def register():
     register_()
+    wmd_nodes.register_nodes()
     bpy.types.TOPBAR_MT_file_import.append(menu_import)
 
 
 def unregister():
     bpy.types.TOPBAR_MT_file_import.remove(menu_import)
+    wmd_nodes.unregister_nodes()
     unregister_()
 
 
