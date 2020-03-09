@@ -6,3 +6,6 @@ class PragmaModelTreeNode:
 
     def get_value(self):
         return None
+
+    def update(self):
+        return

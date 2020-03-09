@@ -3,6 +3,9 @@ import bpy
 
 from .base_node import PragmaModelTreeNode
 
+class PragmaBlankObjectProto:
+    def __init__(self):
+        self.obj = None
 
 class PragmaObjectNode(Node, PragmaModelTreeNode):
     bl_idname = 'PragmaObjectNode'
@@ -14,3 +17,8 @@ class PragmaObjectNode(Node, PragmaModelTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "obj")
+
+    def get_value(self):
+        obj = PragmaBlankObjectProto()
+        obj.obj=self.obj
+        return obj

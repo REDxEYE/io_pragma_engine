@@ -32,7 +32,7 @@ node_categories = [
     ]),
     PragmaNodeCategory("Inputs", "Inputs", items=[
         NodeItem("PragmaObjectNode"),
-        NodeItem("PragmaStringNode"),
+        NodeItem("PragmaBlankObjectNode"),
     ]),
     PragmaNodeCategory("Utils", "Utils", items=[
         NodeItem("PragmaBodygroupNode")
@@ -44,7 +44,8 @@ classes = (
 
     nodes.PragmaObjectNode,
     nodes.PragmaModelNode,
-    nodes.PragmaStringNode,
+    # nodes.PragmaStringNode,
+    nodes.PragmaBlankObjectNode,
     nodes.PragmaBodygroupNode,
     sockets.PragmaObjectSocket,
     sockets.PragmaBodygroupSocket,

@@ -1,7 +1,9 @@
-from typing import List
+from typing import List, Union
 
 import bpy
 from bpy.types import NodeTree, Node, Operator
+
+from .nodes import PragmaBodygroupNode, PragmaBlankObjectNode, PragmaObjectNode
 from . import nodes
 
 
@@ -30,14 +32,15 @@ class PragmaEvaluateNodeTree(Operator):
         bodygroups = start_node.inputs['Bodygroups']
         if objects.is_linked:
             for link in objects.links:
-                self.tmp_file.write("\tmesh " + link.from_node.obj.name + "\n")
-        else:
-            self.tmp_file.write("\tmesh " + objects.obj.name + "\n")
+                object_node: Union[PragmaBlankObjectNode, PragmaObjectNode] = link.from_node
+                self.tmp_file.write("\tmesh " + object_node.get_value().name + "\n")
 
         if bodygroups.is_linked:
             self.tmp_file.write("Bodygroups:\n")
             for link in bodygroups.links:
-                self.tmp_file.write('\t"{}"\n'.format(link.from_node.bodygroup_name))
+                bodygroup_node = link.from_node  # type: nodes.PragmaBodygroupNode
+                self.tmp_file.write(str(bodygroup_node.get_value()))
+                self.tmp_file.write('\n')
 
 
 class PragmaModelTree(NodeTree):
@@ -46,6 +49,8 @@ class PragmaModelTree(NodeTree):
     bl_icon = 'NODETREE'
 
     def update(self, ):
+        for node in self.nodes:
+            node.update()
         for link in self.links:  # type:bpy.types.NodeLink
             if link.from_socket.bl_idname != link.to_socket.bl_idname:
                 self.links.remove(link)
