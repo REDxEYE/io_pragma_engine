@@ -3,7 +3,6 @@ from typing import List, Union
 import bpy
 from bpy.types import NodeTree, Node, Operator
 
-from .nodes import PragmaBodygroupNode, PragmaBlankObjectNode, PragmaObjectNode
 from . import nodes
 
 
@@ -30,10 +29,11 @@ class PragmaEvaluateNodeTree(Operator):
         self.tmp_file.write(start_node.model_name + "\n")
         objects = start_node.inputs['Objects']
         bodygroups = start_node.inputs['Bodygroups']
+        skins = start_node.inputs['Skin']
         if objects.is_linked:
             for link in objects.links:
-                object_node: Union[PragmaBlankObjectNode, PragmaObjectNode] = link.from_node
-                self.tmp_file.write("\tmesh " + object_node.get_value().name + "\n")
+                object_node: nodes.PragmaObjectNode = link.from_node
+                self.tmp_file.write("\tmesh " + object_node.get_value().obj.name + "\n")
 
         if bodygroups.is_linked:
             self.tmp_file.write("Bodygroups:\n")
@@ -41,6 +41,10 @@ class PragmaEvaluateNodeTree(Operator):
                 bodygroup_node = link.from_node  # type: nodes.PragmaBodygroupNode
                 self.tmp_file.write(str(bodygroup_node.get_value()))
                 self.tmp_file.write('\n')
+        if skins.is_linked:
+            skin_node = skins.links[0].from_node  # type: nodes.PragmaSkinNode
+            self.tmp_file.write(str(skin_node.get_value()))
+            self.tmp_file.write('\n')
 
 
 class PragmaModelTree(NodeTree):

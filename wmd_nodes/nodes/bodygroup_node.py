@@ -3,7 +3,6 @@ from bpy.types import Node
 from typing import List, Union
 
 from .base_node import PragmaModelTreeNode
-from .blank_object_node import PragmaBlankObjectNode
 from .input_object_node import PragmaObjectNode
 
 
@@ -14,14 +13,14 @@ class PragmaBodygroupProto:
 
     def __str__(self):
         tmp = f'"{self.name}"\n'
-        for obj in self.objects:
-            if type(obj) is list:
+        for proto in self.objects:
+            if type(proto) is list:
                 tmp += "\t"
-                for o in obj:
-                    tmp += o.name + "+"
+                for o in proto:
+                    tmp += o.obj.name + "+"
                 tmp += '\n'
             else:
-                tmp += "\t" + obj.name + '\n'
+                tmp += "\t" + proto.obj.name + '\n'
         return tmp
 
 
@@ -39,7 +38,7 @@ class PragmaBodygroupNode(Node, PragmaModelTreeNode):
     def update(self, ):
         unused_count = 0
         for o in self.inputs:
-            if (not o.is_linked and o.obj is None) and o.bl_idname in ["PragmaObjectSocket", "PragmaBlankObjectNode"]:
+            if (not o.is_linked) and o.bl_idname == "PragmaObjectSocket":
                 unused_count += 1
         if unused_count > 1:
             for _ in range(unused_count - 1):
@@ -63,10 +62,10 @@ class PragmaBodygroupNode(Node, PragmaModelTreeNode):
                 if len(input_socket.links) > 1:
                     merge: List[bpy.types.Object] = []
                     for link in input_socket.links:
-                        obj_node: Union[PragmaBlankObjectNode, PragmaObjectNode] = link.from_node
+                        obj_node: PragmaObjectNode = link.from_node
                         merge.append(obj_node.get_value())
                     proto.objects.append(merge)
                 else:
-                    obj_node: Union[PragmaBlankObjectNode, PragmaObjectNode] = input_socket.links[0].from_node
+                    obj_node: PragmaObjectNode = input_socket.links[0].from_node
                     proto.objects.append(obj_node.get_value())
         return proto

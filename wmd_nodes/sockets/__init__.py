@@ -1,2 +1,4 @@
 from .bodygroup_socket import PragmaBodygroupSocket
 from .object_socket import PragmaObjectSocket
+from .material_socket import PragmaMaterialSocket
+from .skin_socket import PragmaSkinSocket,PragmaSkinGroupSocket

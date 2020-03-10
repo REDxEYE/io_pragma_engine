@@ -32,9 +32,13 @@ node_categories = [
     ]),
     PragmaNodeCategory("Inputs", "Inputs", items=[
         NodeItem("PragmaObjectNode"),
-        NodeItem("PragmaBlankObjectNode"),
+        NodeItem("PragmaMaterialNode"),
     ]),
-    PragmaNodeCategory("Utils", "Utils", items=[
+    PragmaNodeCategory("Skins", "Skins", items=[
+        NodeItem("PragmaSkingroupNode"),
+        NodeItem("PragmaSkinNode"),
+    ]),
+    PragmaNodeCategory("Bodygroups", "Bodygroups", items=[
         NodeItem("PragmaBodygroupNode")
     ])
 ]
@@ -44,11 +48,17 @@ classes = (
 
     nodes.PragmaObjectNode,
     nodes.PragmaModelNode,
-    # nodes.PragmaStringNode,
-    nodes.PragmaBlankObjectNode,
+    nodes.PragmaMaterialNode,
+
     nodes.PragmaBodygroupNode,
+    nodes.PragmaSkinNode,
+    nodes.PragmaSkingroupNode,
+
     sockets.PragmaObjectSocket,
     sockets.PragmaBodygroupSocket,
+    sockets.PragmaMaterialSocket,
+    sockets.PragmaSkinSocket,
+    sockets.PragmaSkinGroupSocket,
 
     PragmaEvaluateNodeTree
 )

@@ -9,11 +9,10 @@ class PragmaModelNode(Node, PragmaModelTreeNode):
     model_name_prop: bpy.props.StringProperty(name="Model name")
 
     def init(self, context):
-        ob = self.inputs.new('PragmaObjectSocket', "Objects")
-        ob.link_limit = 4096
+        self.inputs.new('PragmaObjectSocket', "Objects").link_limit = 4096
+        self.inputs.new('PragmaBodygroupSocket', "Bodygroups").link_limit = 4096
+        self.inputs.new('PragmaSkinSocket', "Skin")
 
-        bd = self.inputs.new('PragmaBodygroupSocket', "Bodygroups")
-        bd.link_limit = 4096
 
     # Additional buttons displayed on the node.
     def draw_buttons(self, context, layout):
