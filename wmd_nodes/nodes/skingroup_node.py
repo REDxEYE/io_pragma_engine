@@ -24,8 +24,6 @@ class PragmaSkingroupNode(Node, PragmaModelTreeNode):
     bl_idname = 'PragmaSkingroupNode'
     bl_label = "Skingroup"
 
-    # bodygroup_name: bpy.props.StringProperty(name="Bodygroup name")
-
     def init(self, context):
         self.inputs.new('PragmaMaterialSocket', "Material")
 
@@ -70,14 +68,12 @@ class PragmaSkinProto:
 
 class PragmaSkinNode(Node, PragmaModelTreeNode):
     bl_idname = 'PragmaSkinNode'
-    bl_label = "Skins"
-
-    # bodygroup_name: bpy.props.StringProperty(name="Bodygroup name")
+    bl_label = "Skin"
 
     def init(self, context):
-        self.inputs.new('PragmaSkinGroupSocket', "Skingroups")
+        self.inputs.new('PragmaSkinGroupSocket', "Skingroup")
 
-        self.outputs.new('PragmaSkinSocket', "Skins")
+        self.outputs.new('PragmaSkinSocket', "Skin")
 
     def update(self, ):
         unused_count = 0
@@ -88,7 +84,7 @@ class PragmaSkinNode(Node, PragmaModelTreeNode):
             for _ in range(unused_count - 1):
                 self.inputs.remove(self.inputs[-1])
         if unused_count == 0:
-            self.inputs.new("PragmaSkinGroupSocket", "Skingroups")
+            self.inputs.new("PragmaSkinGroupSocket", "Skingroup")
 
     def draw_buttons(self, context, layout):
         self.update()

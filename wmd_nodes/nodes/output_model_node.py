@@ -13,14 +13,9 @@ class PragmaModelNode(Node, PragmaModelTreeNode):
         self.inputs.new('PragmaBodygroupSocket', "Bodygroups").link_limit = 4096
         self.inputs.new('PragmaSkinSocket', "Skin")
 
-
-    # Additional buttons displayed on the node.
     def draw_buttons(self, context, layout):
         layout.prop(self, 'model_name_prop')
         layout.operator("pragma.evaluate_nodetree")
-
-    def draw_label(self):
-        return self.bl_label
 
     @property
     def model_name(self):
