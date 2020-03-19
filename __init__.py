@@ -17,6 +17,7 @@ from bpy.props import StringProperty, BoolProperty, CollectionProperty, EnumProp
 from .model_import import import_model
 from . import wmd_nodes
 
+
 class PyWMDPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
@@ -59,7 +60,12 @@ class WMD_import_OT_operator(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-classes = (PyWMDPreferences, WMD_import_OT_operator)
+class CUSTOM_objectCollection(bpy.types.PropertyGroup):
+    # name: StringProperty() -> Instantiated by default
+    pass
+
+
+classes = (PyWMDPreferences, WMD_import_OT_operator, CUSTOM_objectCollection)
 register_, unregister_ = bpy.utils.register_classes_factory(classes)
 
 

@@ -1,8 +1,8 @@
 import random
 from pathlib import Path
 
-from .PyWMD.byte_io_wmd import ByteIO
-from .PyWMD.pragma_model import PragmaModel, PragmaBone, PragmaMeshV24Plus
+from .PyWMD.byte_io_wmd import ByteIO, split
+from .PyWMD.pragma_model import PragmaModel, PragmaBone, PragmaMeshV24Plus, PragmaSubMeshGeometryType
 import bpy
 from mathutils import Vector, Quaternion, Matrix
 
@@ -99,79 +99,91 @@ def create_armature(model: PragmaModel, collection):
     return armature_obj
 
 
+def build_meshgroup(group, model, armature, collection):
+    if len(group.sub_meshes) == 0:
+        return
+    for sub_mesh in group.sub_meshes:
+        material = model.materials[sub_mesh.material_id]
+
+        mesh_obj = bpy.data.objects.new(f"{group.name}_{material}",
+                                        bpy.data.meshes.new(
+                                            f'{group.name}_{material}_SUB_MESH'))  # type:bpy.types.Object
+        mesh_obj.parent = armature
+        collection.objects.link(mesh_obj)
+        modifier = mesh_obj.modifiers.new(
+            type="ARMATURE", name="Armature")
+        modifier.object = armature
+
+        mesh_data = mesh_obj.data  # type:bpy.types.Mesh
+        split_value = 3 if sub_mesh.geometry_type == PragmaSubMeshGeometryType.Triangles else 4
+        mesh_data.from_pydata(sub_mesh.vertices, [], split(sub_mesh.indices, split_value))
+        mesh_data.update()
+
+        get_material(material, mesh_obj)
+
+        bpy.ops.object.select_all(action="DESELECT")
+        mesh_obj.select_set(True)
+        bpy.context.view_layer.objects.active = mesh_obj
+        bpy.ops.object.shade_smooth()
+
+        mesh_data.use_auto_smooth = True
+        mesh_data.normals_split_custom_set_from_vertices(sub_mesh.normals)
+
+        for uv_set_name, uv_set in sub_mesh.uv_sets.items():
+            uv_layer = mesh_data.uv_layers.new(name=uv_set_name)
+            uv_data = uv_layer.data
+            for i in range(len(uv_data)):
+                u = uv_set[mesh_data.loops[i].vertex_index]
+                x = u[0]*1.333
+                y = u[1]*1.333
+                uv_data[i].uv = (x,y)
+
+        weight_groups = {bone.name: mesh_obj.vertex_groups.new(name=bone.name) for bone in
+                         model.armature.bones}
+        id2bone_name = {i: bone.name for i, bone in enumerate(model.armature.bones)}
+
+        for n, (bone_ids, weights) in enumerate(sub_mesh.weights):
+            for bone_id, weight in zip(bone_ids, weights):
+                if weight == 0.0 or bone_id == -1:
+                    continue
+                weight_groups[id2bone_name[bone_id]].add([n], weight, 'REPLACE')
+        for n, (bone_ids, weights) in enumerate(sub_mesh.additional_weights):
+            for bone_id, weight in zip(bone_ids, weights):
+                if weight == 0.0 or bone_id == -1:
+                    continue
+                weight_groups[id2bone_name[bone_id]].add([n], weight, 'REPLACE')
+
+        mesh_obj.shape_key_add(name='Base')
+
+        for flex_name, flex_info in sub_mesh.flexes.items():
+            frame = flex_info.frames[0]
+
+            if not mesh_obj.data.shape_keys.key_blocks.get(flex_name):
+                mesh_obj.shape_key_add(name=flex_name)
+
+            for vid, v, _ in frame:
+                vertex = mesh_obj.data.vertices[vid]
+                vx = vertex.co.x
+                vy = vertex.co.y
+                vz = vertex.co.z
+                fx, fy, fz = v.values
+                mesh_obj.data.shape_keys.key_blocks[flex_name].data[vid].co = (
+                    fx + vx, fy + vy, fz + vz)
+
+
 def create_model(model, armature, collection):
-    for bodygroup_name, bodygroup in model.mesh.bodygroups.items():
-        bodygroup_collection = bpy.data.collections.new("BP_" + bodygroup_name)
-        collection.children.link(bodygroup_collection)
-        for group in bodygroup:
-            group_collection = bpy.data.collections.new(group.name)
-            bodygroup_collection.children.link(group_collection)
-            if len(group.sub_meshes) == 0:
-                continue
-            for sub_mesh in group.sub_meshes:
-                material = model.materials[sub_mesh.material_id]
-
-                mesh_obj = bpy.data.objects.new(f"{group.name}_{material}",
-                                                bpy.data.meshes.new(
-                                                    f'{group.name}_{material}_SUB_MESH'))  # type:bpy.types.Object
-                mesh_obj.parent = armature
-                group_collection.objects.link(mesh_obj)
-                modifier = mesh_obj.modifiers.new(
-                    type="ARMATURE", name="Armature")
-                modifier.object = armature
-
-                mesh_data = mesh_obj.data  # type:bpy.types.Mesh
-                mesh_data.from_pydata(sub_mesh.vertices, [], sub_mesh.indices)
-                mesh_data.update()
-
-                get_material(material, mesh_obj)
-
-                bpy.ops.object.select_all(action="DESELECT")
-                mesh_obj.select_set(True)
-                bpy.context.view_layer.objects.active = mesh_obj
-                bpy.ops.object.shade_smooth()
-
-                mesh_data.use_auto_smooth = True
-                mesh_data.normals_split_custom_set_from_vertices(sub_mesh.normals)
-
-                for uv_set_name,uv_set in sub_mesh.uv_sets.items():
-                    uv_layer = mesh_data.uv_layers.new(name=uv_set_name)
-                    uv_data = uv_layer.data
-                    for i in range(len(uv_data)):
-                        u = uv_set[mesh_data.loops[i].vertex_index]
-                        uv_data[i].uv = u
-
-                weight_groups = {bone.name: mesh_obj.vertex_groups.new(name=bone.name) for bone in
-                                 model.armature.bones}
-                id2bone_name = {i: bone.name for i, bone in enumerate(model.armature.bones)}
-
-                for n, (bone_ids, weights) in enumerate(sub_mesh.weights):
-                    for bone_id, weight in zip(bone_ids, weights):
-                        if weight == 0.0 or bone_id == -1:
-                            continue
-                        weight_groups[id2bone_name[bone_id]].add([n], weight, 'REPLACE')
-                for n, (bone_ids, weights) in enumerate(sub_mesh.additional_weights):
-                    for bone_id, weight in zip(bone_ids, weights):
-                        if weight == 0.0 or bone_id == -1:
-                            continue
-                        weight_groups[id2bone_name[bone_id]].add([n], weight, 'REPLACE')
-
-                mesh_obj.shape_key_add(name='Base')
-
-                for flex_name, flex_info in sub_mesh.flexes.items():
-                    frame = flex_info.frames[0]
-
-                    if not mesh_obj.data.shape_keys.key_blocks.get(flex_name):
-                        mesh_obj.shape_key_add(name=flex_name)
-
-                    for vid, v, _ in frame:
-                        vertex = mesh_obj.data.vertices[vid]
-                        vx = vertex.co.x
-                        vy = vertex.co.y
-                        vz = vertex.co.z
-                        fx, fy, fz = v.values
-                        mesh_obj.data.shape_keys.key_blocks[flex_name].data[vid].co = (
-                            fx + vx, fy + vy, fz + vz)
+    if model.mesh.bodygroups:
+        for bodygroup_name, bodygroup in model.mesh.bodygroups.items():
+            bodygroup_collection = bpy.data.collections.new("BP_" + bodygroup_name)
+            collection.children.link(bodygroup_collection)
+            for group in bodygroup:
+                group_collection = bpy.data.collections.new(group.name)
+                bodygroup_collection.children.link(group_collection)
+                build_meshgroup(group, model, armature, group_collection)
+    else:
+        for group_id in set(model.mesh.group_ids):
+            group = model.mesh.mesh_groups[group_id]
+            build_meshgroup(group, model, armature, collection)
 
 
 def import_model(model_path: str):
