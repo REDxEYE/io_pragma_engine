@@ -134,9 +134,9 @@ def build_meshgroup(group, model, armature, collection):
             uv_data = uv_layer.data
             for i in range(len(uv_data)):
                 u = uv_set[mesh_data.loops[i].vertex_index]
-                x = u[0]*1.333
-                y = u[1]*1.333
-                uv_data[i].uv = (x,y)
+                # x = u[0]*1.333
+                # y = u[1]*1.333
+                uv_data[i].uv = u
 
         weight_groups = {bone.name: mesh_obj.vertex_groups.new(name=bone.name) for bone in
                          model.armature.bones}
