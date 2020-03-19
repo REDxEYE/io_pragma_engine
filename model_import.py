@@ -111,15 +111,16 @@ def create_model(model, armature, collection):
             for sub_mesh in group.sub_meshes:
                 material = model.materials[sub_mesh.material_id]
 
-                mesh_obj = bpy.data.objects.new(group.name + "_" + material,
-                                                bpy.data.meshes.new('{}_{}_SUB_MESH'.format(group.name, material)))
+                mesh_obj = bpy.data.objects.new(f"{group.name}_{material}",
+                                                bpy.data.meshes.new(
+                                                    f'{group.name}_{material}_SUB_MESH'))  # type:bpy.types.Object
                 mesh_obj.parent = armature
                 group_collection.objects.link(mesh_obj)
                 modifier = mesh_obj.modifiers.new(
                     type="ARMATURE", name="Armature")
                 modifier.object = armature
 
-                mesh_data = mesh_obj.data
+                mesh_data = mesh_obj.data  # type:bpy.types.Mesh
                 mesh_data.from_pydata(sub_mesh.vertices, [], sub_mesh.indices)
                 mesh_data.update()
 
@@ -133,11 +134,12 @@ def create_model(model, armature, collection):
                 mesh_data.use_auto_smooth = True
                 mesh_data.normals_split_custom_set_from_vertices(sub_mesh.normals)
 
-                mesh_data.uv_layers.new()
-                uv_data = mesh_data.uv_layers[0].data
-                for i in range(len(uv_data)):
-                    u = sub_mesh.uvs[mesh_data.loops[i].vertex_index]
-                    uv_data[i].uv = u
+                for uv_set_name,uv_set in sub_mesh.uv_sets.items():
+                    uv_layer = mesh_data.uv_layers.new(name=uv_set_name)
+                    uv_data = uv_layer.data
+                    for i in range(len(uv_data)):
+                        u = uv_set[mesh_data.loops[i].vertex_index]
+                        uv_data[i].uv = u
 
                 weight_groups = {bone.name: mesh_obj.vertex_groups.new(name=bone.name) for bone in
                                  model.armature.bones}
