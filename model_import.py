@@ -67,7 +67,7 @@ def pose_bone(root_bone: PragmaBone, armature):
 def create_armature(model: PragmaModel, collection):
     bpy.ops.object.armature_add(enter_editmode=True)
 
-    armature_obj = bpy.context.object
+    armature_obj: bpy.types.Object = bpy.context.object
     try:
         bpy.context.scene.collection.objects.unlink(armature_obj)
     except:
@@ -75,7 +75,7 @@ def create_armature(model: PragmaModel, collection):
 
     collection.objects.link(armature_obj)
     armature_obj.name = model.name + '_ARM'
-    armature = armature_obj.data
+    armature: bpy.types.Armature = armature_obj.data
     armature.name = model.name + "_ARM_DATA"
 
     armature_obj.select_set(True)
@@ -169,20 +169,29 @@ def build_meshgroup(group, model, armature, collection):
                 fx, fy, fz = v.values
                 mesh_obj.data.shape_keys.key_blocks[flex_name].data[vid].co = (
                     fx + vx, fy + vy, fz + vz)
+        if sub_mesh.alphas and sub_mesh.alpha_count:
+            vertex_colors = mesh_data.vertex_colors.new(name="ALPHAS")
+            uv_data: bpy.types.MeshLoopColor = vertex_colors.data
+            for i in range(len(uv_data)):
+                alpha_data = sub_mesh.alphas[mesh_data.loops[i].vertex_index]
+                uv_data[i].color = (alpha_data.x, alpha_data.y, 0, 0)
 
 
 def create_model(model, armature, collection):
     if model.mesh.bodygroups:
         for bodygroup_name, bodygroup in model.mesh.bodygroups.items():
+            print(f"Creating {bodygroup_name} bodygroup")
             bodygroup_collection = bpy.data.collections.new("BP_" + bodygroup_name)
             collection.children.link(bodygroup_collection)
             for group in bodygroup:
+                print(f"\tCreating {group.name} mesh")
                 group_collection = bpy.data.collections.new(group.name)
                 bodygroup_collection.children.link(group_collection)
                 build_meshgroup(group, model, armature, group_collection)
     else:
         for group_id in set(model.mesh.group_ids):
             group = model.mesh.mesh_groups[group_id]
+            print(f"Creating {group.name} mesh")
             build_meshgroup(group, model, armature, collection)
 
 
