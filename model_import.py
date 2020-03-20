@@ -1,8 +1,8 @@
 import random
 from pathlib import Path
 
-from .PyWMD.byte_io_wmd import ByteIO, split
-from .PyWMD.pragma_model import PragmaModel, PragmaBone, PragmaMeshV24Plus, PragmaSubMeshGeometryType
+from .PyPragma.byte_io_wmd import ByteIO, split
+from .PyPragma.wmd import Model, Bone, Mesh, SubMeshGeometryType
 import bpy
 from mathutils import Vector, Quaternion, Matrix
 
@@ -42,14 +42,14 @@ def get_material(mat_name, model_ob):
     return mat_ind
 
 
-def create_child_bones(root_bone: PragmaBone, parent, armature):
+def create_child_bones(root_bone: Bone, parent, armature):
     for child in root_bone.childs:
         bone = armature.edit_bones.new(child.name)
         bone.parent = parent
         create_child_bones(child, bone, armature)
 
 
-def pose_bone(root_bone: PragmaBone, armature):
+def pose_bone(root_bone: Bone, armature):
     bl_bone = armature.pose.bones.get(root_bone.name)
     pos = Vector(root_bone.position.values)
     rot = Quaternion(root_bone.rotation.values)
@@ -64,7 +64,7 @@ def pose_bone(root_bone: PragmaBone, armature):
         pose_bone(child, armature)
 
 
-def create_armature(model: PragmaModel, collection):
+def create_armature(model: Model, collection):
     bpy.ops.object.armature_add(enter_editmode=True)
 
     armature_obj: bpy.types.Object = bpy.context.object
@@ -87,7 +87,7 @@ def create_armature(model: PragmaModel, collection):
         bone = armature.edit_bones.new(root_bone.name)
         create_child_bones(root_bone, bone, armature)
 
-    for bone in model.armature.bones:  # type: PragmaBone
+    for bone in model.armature.bones:  # type: Bone
         bl_bone = armature.edit_bones.get(bone.name)
         bl_bone.tail = Vector([1, 0, 0]) + bl_bone.head
 
@@ -115,7 +115,7 @@ def build_meshgroup(group, model, armature, collection):
         modifier.object = armature
 
         mesh_data = mesh_obj.data  # type:bpy.types.Mesh
-        split_value = 3 if sub_mesh.geometry_type == PragmaSubMeshGeometryType.Triangles else 4
+        split_value = 3 if sub_mesh.geometry_type == SubMeshGeometryType.Triangles else 4
         mesh_data.from_pydata(sub_mesh.vertices, [], split(sub_mesh.indices, split_value))
         mesh_data.update()
 
@@ -198,8 +198,8 @@ def create_model(model, armature, collection):
 def import_model(model_path: str):
     model_path = Path(model_path)
     reader = ByteIO(path=model_path)
-    if PragmaModel.check_header(reader):
-        model = PragmaModel()
+    if Model.check_header(reader):
+        model = Model()
         model.from_file(reader)
         model.set_name(model_path.stem)
         main_collection = bpy.data.collections.new(model_path.stem)
