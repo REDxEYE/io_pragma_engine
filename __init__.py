@@ -5,7 +5,7 @@ from pathlib import Path
 bl_info = {
     "name": "Pragma Engine model(.wmd)",
     "author": "RED_EYE, Silverlan",
-    "version": (0, 0, 4),
+    "version": (0, 0, 5),
     "blender": (2, 80, 0),
     "location": "File > Import-Export > Import Pragma WMD file",
     "description": "Import/Export Pragma models",
